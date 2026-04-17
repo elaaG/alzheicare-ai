@@ -3,8 +3,14 @@ from core.exceptions import (
     EmptyMessageError,
     InvalidStageError,
     InvalidRoleError,
+    AlzheiCareException,
 )
-from utils.validators import validate_message, validate_stage, validate_role
+from utils.validators import (
+    validate_message,
+    validate_stage,
+    validate_role,
+    validate_language_code,
+)
 
 
 class TestValidateMessage:
@@ -78,3 +84,18 @@ class TestValidateRole:
     def test_empty_role_raises(self):
         with pytest.raises(InvalidRoleError):
             validate_role("")
+
+
+class TestValidateLanguageCode:
+    def test_supported_language_passes(self):
+        assert validate_language_code("fr") == "fr"
+
+    def test_language_is_normalized(self):
+        assert validate_language_code(" EN ") == "en"
+
+    def test_none_stays_none(self):
+        assert validate_language_code(None) is None
+
+    def test_invalid_language_raises(self):
+        with pytest.raises(AlzheiCareException):
+            validate_language_code("xx")

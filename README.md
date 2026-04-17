@@ -11,12 +11,19 @@ Part of the AlzheiCare platform — runs independently, called internally by Nes
  Framework | FastAPI (Python 3.12) 
  LLM | Groq — `llama-3.3-70b-versatile` 
  STT | Groq — `whisper-large-v3` 
- TTS | Groq — `canopylabs/orpheus-v1-english` 
+ TTS | Edge TTS (Microsoft voices) — MPEG stream 
  LLM Fallback | OpenRouter — `meta-llama/llama-3.3-70b-instruct:free` 
  Web Search | Tavily API 
  Memory | Redis (TTL: 7 days) 
  Auth | JWT (shared secret with NestJS) 
  Streaming | Server-Sent Events (SSE) 
+RAG | Local PDF/TXT/MD retrieval (TF-IDF) 
+
+## RAG (Knowledge Base)
+
+- Put Alzheimer documents in `knowledge_base/` (`.pdf`, `.txt`, `.md`)
+- RAG is loaded at startup and injected into prompt for both `/chat` and `/chat/stream`
+- Detailed setup and tuning: `docs/RAG_SETUP.md`
 
 ---
 

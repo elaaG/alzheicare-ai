@@ -44,11 +44,9 @@ async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> TokenPayload:
-
-# ye dorra wnti taqra fl code hedhy rahy bypass dev it just skips JWT auth and returns a fake user only in non-production
     if not settings.is_production and request.headers.get("X-Dev-Bypass") == "true":
         logger.warning("auth_bypassed_dev_mode")
-        return TokenPayload(
+        user = TokenPayload(
             sub="dev-user-001",
             role="caregiver",
             patient_id="dev-patient-001",
@@ -56,11 +54,14 @@ async def get_current_user(
             patient_age=75,
             patient_stage=1,
         )
+        request.state.user_id = user.sub
+        return user
 
     if not credentials:
         raise InvalidTokenError(internal="No Authorization header")
 
     user = _decode_token(credentials.credentials)
+    request.state.user_id = user.sub
 
     structlog.contextvars.bind_contextvars(
         user_id=user.sub,

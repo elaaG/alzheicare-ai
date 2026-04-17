@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
-import io
 import structlog
 
 from core.security import get_current_user, TokenPayload, verify_internal_key
@@ -24,8 +23,8 @@ class SpeakRequest(BaseModel):
     "",
     responses={
         200: {
-            "content": {"audio/wav": {}},
-            "description": "WAV audio stream at 48kHz",
+            "content": {"audio/mpeg": {}},
+            "description": "MPEG audio stream (edge-tts output)",
         }
     },
 )
@@ -50,9 +49,9 @@ async def speak(
 
     return Response(
         content=audio_bytes,
-        media_type="audio/wav",
+        media_type="audio/mpeg",
         headers={
-            "Content-Disposition": "inline; filename=response.wav",
+            "Content-Disposition": "inline; filename=response.mp3",
             "Cache-Control": "no-store",  
         },
     )

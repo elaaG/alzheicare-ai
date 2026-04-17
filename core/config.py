@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     max_tokens: int = 800
     temperature: float = 0.4
     request_timeout_seconds: int = 30
+    rag_enabled: bool = True
+    rag_docs_path: str = "knowledge_base"
+    rag_top_k: int = 4
+    rag_chunk_size: int = 900
+    rag_chunk_overlap: int = 150
 
     @field_validator("app_env")
     @classmethod

@@ -16,6 +16,13 @@ services:
       - APP_ENV=${APP_ENV:-development}
       - APP_VERSION=${APP_VERSION:-1.0.0}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - RAG_ENABLED=${RAG_ENABLED:-true}
+      - RAG_DOCS_PATH=${RAG_DOCS_PATH:-/app/knowledge_base}
+      - RAG_TOP_K=${RAG_TOP_K:-4}
+      - RAG_CHUNK_SIZE=${RAG_CHUNK_SIZE:-900}
+      - RAG_CHUNK_OVERLAP=${RAG_CHUNK_OVERLAP:-150}
+    volumes:
+      - ../knowledge_base:/app/knowledge_base:ro
     depends_on:
       redis:
         condition: service_healthy

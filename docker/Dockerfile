@@ -37,10 +37,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health/ping || exit 1
 
-CMD ["uvicorn", "main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "1", \
-     "--loop", "uvloop", \
-     "--log-level", "warning", \
-     "--access-log"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --loop uvloop --log-level $(echo ${LOG_LEVEL:-info} | tr '[:upper:]' '[:lower:]') --access-log"]

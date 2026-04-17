@@ -6,6 +6,7 @@ from core.constants import (
     SUPPORTED_AUDIO_EXTENSIONS,
     VALID_ROLES,
     VALID_STAGES,
+    VALID_LANGUAGE_CODES,
 )
 from core.exceptions import (
     AudioTooLargeError,
@@ -13,6 +14,7 @@ from core.exceptions import (
     EmptyMessageError,
     InvalidStageError,
     InvalidRoleError,
+    AlzheiCareException,
 )
 
 
@@ -54,14 +56,39 @@ async def validate_audio_file(audio: UploadFile) -> bytes:
     if not type_ok and not ext_ok:
         raise InvalidAudioFormatError(received=content_type)
 
-    # Read and check size
-    audio_bytes = await audio.read()
-    size_mb = len(audio_bytes) / (1024 * 1024)
+    max_bytes = settings.max_audio_size_mb * 1024 * 1024
+    total_size = 0
+    chunks: list[bytes] = []
+    while True:
+        chunk = await audio.read(1024 * 1024)
+        if not chunk:
+            break
+        total_size += len(chunk)
+        if total_size > max_bytes:
+            raise AudioTooLargeError(max_mb=settings.max_audio_size_mb)
+        chunks.append(chunk)
 
-    if size_mb > settings.max_audio_size_mb:
-        raise AudioTooLargeError(max_mb=settings.max_audio_size_mb)
+    audio_bytes = b"".join(chunks)
 
     if len(audio_bytes) < 100:
         raise InvalidAudioFormatError(received="empty file")
 
     return audio_bytes
+
+
+def validate_language_code(language: str | None) -> str | None:
+    if language is None:
+        return None
+    normalized = language.strip().lower()
+    if not normalized:
+        return None
+    if normalized not in VALID_LANGUAGE_CODES:
+        raise AlzheiCareException(
+            status_code=422,
+            detail=(
+                "Langue non supportee. Utilisez l'un des codes ISO: "
+                + ", ".join(sorted(VALID_LANGUAGE_CODES))
+            ),
+            internal=f"Received language={language}",
+        )
+    return normalized

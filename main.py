@@ -12,7 +12,8 @@ from middleware.logging import configure_logging, RequestLoggingMiddleware
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import RateLimitMiddleware
 
-from routers import chat, transcribe, speak, health
+from routers import chat, transcribe, speak, health, rag
+from services.rag import rag_service
 
 import structlog
 
@@ -42,6 +43,11 @@ async def lifespan(app: FastAPI):
             logger.warning("startup_redis_unavailable_degraded_mode")
     except Exception as e:
         logger.warning("startup_redis_error", error=str(e))
+
+    try:
+        await rag_service.initialize()
+    except Exception as e:
+        logger.warning("startup_rag_error", error=str(e))
 
     logger.info("alzheicare_ai_ready", docs_url="/docs")
 
@@ -81,7 +87,7 @@ app.add_middleware(
             "https://alzheicare.tn",       
         ]
     ),
-    allow_credentials=True,
+    allow_credentials=settings.is_production,
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -92,6 +98,7 @@ app.include_router(health.router)
 app.include_router(chat.router)
 app.include_router(transcribe.router)
 app.include_router(speak.router)
+app.include_router(rag.router)
 
 
 if __name__ == "__main__":

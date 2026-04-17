@@ -8,6 +8,7 @@ from core.prompt import build_messages
 from core.exceptions import EmptyMessageError
 from services.llm import stream_completion, get_completion
 from services.search import needs_web_search, search_alzheimer_research
+from services.rag import rag_service
 from memory.redis_memory import get_history, append_exchange
 from utils.validators import validate_message
 
@@ -49,6 +50,7 @@ async def chat_stream(
     history = await get_history(user.sub)
 
     search_context = ""
+    rag_context = rag_service.retrieve_context(message)
     if needs_web_search(message):
         logger.info("chat_triggering_search", query=message[:80])
         search_context = await search_alzheimer_research(message)
@@ -58,6 +60,7 @@ async def chat_stream(
         user=user,
         history=history,
         search_context=search_context,
+        rag_context=rag_context,
     )
 
     async def event_generator():
@@ -100,6 +103,7 @@ async def chat_sync(
 
     used_search = False
     search_context = ""
+    rag_context = rag_service.retrieve_context(message)
     if needs_web_search(message):
         search_context = await search_alzheimer_research(message)
         used_search = bool(search_context)
@@ -109,6 +113,7 @@ async def chat_sync(
         user=user,
         history=history,
         search_context=search_context,
+        rag_context=rag_context,
     )
 
     reply = await get_completion(messages)

@@ -16,6 +16,7 @@ SUPPORTED_AUDIO_EXTENSIONS = {".webm", ".mp4", ".mp3", ".wav", ".ogg", ".m4a"}
 
 VALID_ROLES = {"caregiver", "doctor", "admin"}
 VALID_STAGES = {0, 1, 2}
+VALID_LANGUAGE_CODES = {"fr", "ar", "en", "es", "de", "it", "pt"}
 
 REDIS_HISTORY_PREFIX = "assistant:history:"
 REDIS_RATE_PREFIX    = "rate:assistant:"

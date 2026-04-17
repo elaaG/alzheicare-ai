@@ -32,7 +32,11 @@ MEDICAL KNOWLEDGE:
 """
 
 
-def build_system_prompt(user: TokenPayload, search_context: str = "") -> str:
+def build_system_prompt(
+    user: TokenPayload,
+    search_context: str = "",
+    rag_context: str = "",
+) -> str:
     stage_label = _STAGE_LABELS.get(user.patient_stage, "unknown")
 
     prompt = _MEDICAL_BASE
@@ -85,6 +89,13 @@ CURRENT RESEARCH RESULTS — USE THIS TO ANSWER IF RELEVANT:
 (Source: real-time web search. Synthesise this naturally into your response.)
 """
 
+    if rag_context:
+        prompt += f"""
+KNOWLEDGE BASE EXCERPTS — USE THESE AS PRIORITY EVIDENCE WHEN RELEVANT:
+{rag_context}
+(Source: curated local Alzheimer documents. Cite the source titles naturally.)
+"""
+
     prompt += """
 ABSOLUTE SAFETY RULES — NEVER VIOLATE THESE:
 1. NEVER provide a diagnosis — you support decision-making, you do not diagnose
@@ -116,9 +127,14 @@ def build_messages(
     user: TokenPayload,
     history: list[dict],
     search_context: str = "",
+    rag_context: str = "",
 ) -> list[dict]:
     
-    system_prompt = build_system_prompt(user, search_context)
+    system_prompt = build_system_prompt(
+        user=user,
+        search_context=search_context,
+        rag_context=rag_context,
+    )
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history)

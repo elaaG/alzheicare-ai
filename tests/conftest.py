@@ -1,6 +1,7 @@
 import pytest
 import sys
 import os
+from httpx import AsyncClient, ASGITransport
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -51,3 +52,22 @@ def sample_patient_context():
         "user_role": "caregiver",
         "user_id": "test-user-001",
     }
+
+
+@pytest.fixture
+def dev_headers():
+    return {
+        "X-Dev-Bypass": "true",
+        "Content-Type": "application/json",
+    }
+
+
+@pytest.fixture(scope="function")
+async def client():
+    from main import app
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as c:
+        yield c

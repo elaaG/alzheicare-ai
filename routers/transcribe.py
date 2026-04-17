@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from pydantic import BaseModel
 import structlog
+from langdetect import detect
 
 from core.security import get_current_user, TokenPayload, verify_internal_key
 from services.stt import transcribe_audio
-from utils.validators import validate_audio_file
+from utils.validators import validate_audio_file, validate_language_code
 
 logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/transcribe", tags=["Speech-to-Text"])
@@ -35,6 +36,7 @@ async def transcribe(
         language=language or "auto",
     )
 
+    language = validate_language_code(language)
     audio_bytes = await validate_audio_file(audio)
 
     text = await transcribe_audio(
@@ -50,4 +52,11 @@ async def transcribe(
         char_count=len(text),
     )
 
-    return TranscribeResponse(text=text)
+    detected_language = language
+    if not detected_language:
+        try:
+            detected_language = detect(text)
+        except Exception:
+            detected_language = None
+
+    return TranscribeResponse(text=text, language_detected=detected_language)
