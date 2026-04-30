@@ -34,6 +34,12 @@ async def lifespan(app: FastAPI):
         fallback_enabled=settings.fallback_enabled,
     )
 
+    if settings.is_production and not settings.internal_api_key:
+        raise RuntimeError(
+            "FASTAPI_INTERNAL_API_KEY must be set in production. "
+            "This key is required for service-to-service authentication."
+        )
+
     try:
         from memory.redis_memory import get_redis
         redis = await get_redis()

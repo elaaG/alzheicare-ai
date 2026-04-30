@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from functools import lru_cache
+from pydantic import field_validator, model_validator
 
 
 class Settings(BaseSettings):
@@ -74,3 +75,12 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+@model_validator(mode='after')
+def validate_production_secrets(self) -> 'Settings':
+    if self.app_env == 'production':
+        if not self.jwt_secret or self.jwt_secret == 'dev_secret':
+            raise ValueError(
+                'JWT_SECRET must be set to a strong value in production'
+            )
+    return self

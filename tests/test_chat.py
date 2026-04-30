@@ -71,7 +71,22 @@ class TestChatStream:
             json={"message": long_message},
         )
         assert response.status_code == 200
-
+    
+    @pytest.mark.asyncio
+    async def test_stream_chunks_arrive_incrementally(self, client, dev_headers):
+        chunks = []
+        async with client.stream(
+            "POST", "/chat/stream",
+            headers=dev_headers,
+            json={"message": "Hello"},
+        ) as response:
+            assert response.status_code == 200
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    chunks.append(line)
+        
+        assert len(chunks) > 1
+        assert any("[DONE]" in c for c in chunks)
 
 
 class TestChatSync:

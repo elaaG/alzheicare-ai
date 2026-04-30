@@ -89,11 +89,19 @@ def require_role(*allowed_roles: str):
 
 
 async def verify_internal_key(request: Request) -> None:
-   
-    if not settings.internal_api_key:
-        return
- 
-    key = request.headers.get("X-Internal-Key")
-    if key != settings.internal_api_key:
-        logger.warning("invalid_internal_key", path=request.url.path)
-        raise InvalidTokenError(internal="Missing or invalid X-Internal-Key")
+    if settings.is_production:
+        if not settings.internal_api_key:
+            raise InsufficientPermissionsError(
+                internal="FASTAPI_INTERNAL_API_KEY not configured in production"
+            )
+        key = request.headers.get("X-Internal-Key")
+        if key != settings.internal_api_key:
+            logger.warning("invalid_internal_key", path=request.url.path)
+            raise InvalidTokenError(internal="Missing or invalid X-Internal-Key")
+    else:
+        if not settings.internal_api_key:
+            return
+        key = request.headers.get("X-Internal-Key")
+        if key != settings.internal_api_key:
+            logger.warning("invalid_internal_key", path=request.url.path)
+            raise InvalidTokenError(internal="Missing or invalid X-Internal-Key")

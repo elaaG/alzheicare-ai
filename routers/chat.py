@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+import asyncio
 import structlog
 
 from core.security import get_current_user, TokenPayload, verify_internal_key
@@ -67,9 +68,12 @@ async def chat_stream(
         complete_response = ""
 
         async for chunk in stream_completion(messages):
-            yield chunk
-            if chunk.startswith("data: ") and not chunk.startswith("data: ["):
-                token = chunk[6:].strip()
+            formatted_chunk = chunk if chunk.endswith("\n\n") else f"{chunk}\n\n"
+            yield formatted_chunk
+            # Give the event loop a chance to flush each SSE chunk.
+            await asyncio.sleep(0)
+            if formatted_chunk.startswith("data: ") and not formatted_chunk.startswith("data: ["):
+                token = formatted_chunk[6:].strip()
                 complete_response += token + " "
 
         if complete_response.strip():
