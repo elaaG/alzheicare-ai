@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
-from functools import lru_cache
 from pydantic import field_validator, model_validator
+from functools import lru_cache
 
 
 class Settings(BaseSettings):
@@ -10,10 +9,9 @@ class Settings(BaseSettings):
     groq_stt_model: str = "whisper-large-v3"
     groq_tts_model: str = "canopylabs/orpheus-v1-english"
     groq_tts_voice: str = "diana"
-   
 
-    openrouter_api_key: str = ""          
-    tavily_api_key: str = ""              
+    openrouter_api_key: str = ""
+    tavily_api_key: str = ""
 
     redis_url: str = "redis://localhost:6379"
 
@@ -54,6 +52,19 @@ class Settings(BaseSettings):
             raise ValueError("temperature must be between 0.0 and 1.0")
         return v
 
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        if self.app_env == "production":
+            if not self.jwt_secret or self.jwt_secret == "dev_secret":
+                raise ValueError(
+                    "JWT_SECRET must be set to a strong value in production"
+                )
+            if not self.internal_api_key:
+                raise ValueError(
+                    "INTERNAL_API_KEY must be set in production"
+                )
+        return self
+
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
@@ -75,12 +86,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
-@model_validator(mode='after')
-def validate_production_secrets(self) -> 'Settings':
-    if self.app_env == 'production':
-        if not self.jwt_secret or self.jwt_secret == 'dev_secret':
-            raise ValueError(
-                'JWT_SECRET must be set to a strong value in production'
-            )
-    return self
