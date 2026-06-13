@@ -4,6 +4,7 @@ Intelligent AI assistant for Alzheimer's disease caregiving support.
 Part of the AlzheiCare platform — runs independently, called internally by NestJS.
 
 ---
+<img width="1472" height="1500" alt="workflow" src="https://github.com/user-attachments/assets/c5def095-dc06-4eb0-a9b1-068bad0c1910" />
 
 ## Stack
 
